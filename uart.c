@@ -51,3 +51,38 @@ void UART_SendChar(unsigned char uart, char data) {
     }
 }
 
+void __attribute__((__interrupt__, auto_psv)) _U1RXInterrupt(void) {
+    IFS0bits.U1RXIF = 0;
+    while (U1STAbits.URXDA) {
+#if UART_OVERWRITE_ON_FULL
+        while (!buffer_write(&main_buffer_1, U1RXREG)) {
+            char tmp;
+            buffer_read(&main_buffer_1, &tmp);
+        }
+#else
+        char incoming = U1RXREG;
+        buffer_write(&main_buffer_1, incoming);
+        
+#endif
+    }
+    if (U1STAbits.OERR){
+        U1STAbits.OERR = 0;
+    }
+}
+
+void __attribute__((__interrupt__, auto_psv)) _U2RXInterrupt(void) {  
+    IFS1bits.U2RXIF = 0;
+    while (U2STAbits.URXDA) {
+#if UART_OVERWRITE_ON_FULL
+        while (!buffer_write(&main_buffer_2, U2RXREG)) {
+            char tmp;
+            buffer_read(&main_buffer_2, &tmp);
+        }
+#else
+        buffer_write(&main_buffer_2, U2RXREG);
+#endif
+    }
+    if (U2STAbits.OERR){
+        U2STAbits.OERR = 0;
+    }
+}
