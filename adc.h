@@ -10,6 +10,10 @@
 
 #include <xc.h> 
 #include "timer.h"
+#include "uart.h"
+
+#define ADC_REF_VOLTAGE 3.3f
+#define ADC_RESOLUTION 4095.0f
 
 void ADC_Init_Battery(void);
 void ADC_Init_IR(void);

@@ -9,11 +9,6 @@
 #include "xc.h"
 #include "adc.h"
 
-#define ADC_REF_VOLTAGE 3.3f
-#define ADC_RESOLUTION 4095.0f
-#define TIMER1 1
-#define TIMER2 2
-
 void ADC_Init_Battery(void) {
     AD1CON1bits.ADON = 0;
     ANSELBbits.ANSB11 = 1;
@@ -79,6 +74,24 @@ void ADC_ReadBoth(uint16_t *ir_raw, uint16_t *bat_raw) {
     while (!AD1CON1bits.DONE);
     *ir_raw = ADC1BUF0;
     *bat_raw = ADC1BUF1;
+}
+
+void send_uart_float_label(const char* label, float value) {
+    char buffer[32];
+    sprintf(buffer, "$%s:%.2f*\n", label, value);
+    char* ptr = buffer;
+    while (*ptr) {
+        UART_SendChar(UART_1, *ptr++);
+    }
+}
+
+void send_uart_formatted(float ir_cm, float bat_v) {
+    char buffer[64];
+    sprintf(buffer, "$SENS,%.2f,%.2f*\n", ir_cm, bat_v);
+    char* ptr = buffer;
+    while (*ptr) {
+        UART_SendChar(UART_1, *ptr++);
+    }
 }
 
 float ADC_ConvertIRVoltageToDistance(float v) {
