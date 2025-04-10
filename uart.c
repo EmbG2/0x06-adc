@@ -17,7 +17,7 @@ void UART_Init(unsigned char uart) {
         RPOR0bits.RP64R = 1;     // TX pin mapping
         RPINR18bits.U1RXR = 75;  // RX pin mapping
         U1MODEbits.UARTEN = 0;   // disable UART
-        U1MODEbits.STSEL = 1;    // Stop bit
+        U1MODEbits.STSEL = 0;    // Stop bit
         U1MODEbits.PDSEL = 0;    // Parity
         U1MODEbits.ABAUD = 0;    // Auto-baud disabled
         U1MODEbits.BRGH = 0;     // Low-speed mode
@@ -44,6 +44,7 @@ void UART_Init(unsigned char uart) {
 }
 
 void UART_SendChar(unsigned char uart, char data) {
+    while(U1STAbits.UTXBF);
     if (uart == UART_1) {
         U1TXREG = data;          // Send character
     } else if (uart == UART_2) {
