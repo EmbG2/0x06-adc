@@ -10,53 +10,54 @@
 #include "adc.h"
 
 void ADC_Init_Battery(void) {
-    AD1CON1bits.ADON = 0;
-    ANSELBbits.ANSB11 = 1;
-    AD1CON1bits.ASAM = 0;
-    AD1CON1bits.SSRC = 0;
-    AD1CON1bits.AD12B = 1;
-    AD1CON1bits.FORM = 0;
-    AD1CHS0bits.CH0SA = 11;
-    AD1CON3bits.ADCS = 8;
-    AD1CON1bits.ADON = 1;
+    AD1CON1bits.ADON = 0;    // stop ADC
+    ANSELBbits.ANSB11 = 1;   // battery connected to AN11
+    AD1CON1bits.ASAM = 0;    // manual start
+    AD1CON1bits.SSRC = 0;    // manual end
+    AD1CON1bits.AD12B = 1;   // 1-channel ADC operation
+    AD1CON1bits.FORM = 0;    // integer in range 0-4095
+    AD1CHS0bits.CH0SA = 11;  // selection of the analog pin
+    AD1CON3bits.ADCS = 8;    // TAD = 8 * TCY
+    AD1CON1bits.ADON = 1;    // start ADC
 }
 
 void ADC_Init_IR(void) {
-    AD1CON1bits.ADON = 0;
-    ANSELBbits.ANSB2 = 1;
-    AD1CON1bits.ASAM = 0;
-    AD1CON1bits.SSRC = 7;
-    AD1CON1bits.AD12B = 1;
-    AD1CON1bits.FORM = 0;
-    AD1CHS0bits.CH0SA = 2;
-    AD1CON3bits.SAMC = 16;
-    AD1CON3bits.ADCS = 8;
-    AD1CON1bits.ADON = 1;
+    AD1CON1bits.ADON = 0;    // stop ADC
+    ANSELBbits.ANSB2 = 1;    // IR sensor connected to AN2
+    AD1CON1bits.ASAM = 0;    // manual start
+    AD1CON3bits.SAMC = 16;   // sample time = 16 TAD
+    AD1CON1bits.SSRC = 7;    // automatic end
+    AD1CON1bits.AD12B = 1;   // 1-channel ADC operation
+    AD1CON1bits.FORM = 0;    // integer in range 0-4095
+    AD1CHS0bits.CH0SA = 2;   // selection of the analog pin
+    AD1CON3bits.ADCS = 8;    // TAD = 8 * TCY
+    AD1CON1bits.ADON = 1;    // start ADC
 }
 
 void ADC_Init_Scan(void) {
-    AD1CON1bits.ADON = 0;
-    ANSELBbits.ANSB2 = 1;
-    ANSELBbits.ANSB11 = 1;
-    AD1CON1bits.ASAM = 1;
-    AD1CON1bits.SSRC = 7;
-    AD1CON1bits.AD12B = 1;
-    AD1CON1bits.FORM = 0;
-    AD1CON2bits.CHPS = 0;
-    AD1CON2bits.CSCNA = 1;
-    AD1CON2bits.SMPI = 1;
-    AD1CON3bits.SAMC = 16;
-    AD1CON3bits.ADCS = 8;
-    AD1CSSL = 0;
-    AD1CSSLbits.CSS2 = 1;
-    AD1CSSLbits.CSS11 = 1;
-    AD1CON1bits.ADON = 1;
+    AD1CON1bits.ADON = 0;    // stop ADC
+    ANSELBbits.ANSB2 = 1;    // IR connected to AN2
+    ANSELBbits.ANSB11 = 1;   // battery connected to AN11
+    AD1CON1bits.ASAM = 1;    // automatic start
+    AD1CON3bits.SAMC = 16;   // sample time = 16 TAD
+    AD1CON1bits.SSRC = 7;    // automatic end
+    AD1CON1bits.AD12B = 1;   // is it one channel or two channel?
+    AD1CON1bits.FORM = 0;    // integer in range of 0-4095
+
+    AD1CON2bits.CSCNA = 1;   // scan mode is enabled
+    AD1CON2bits.CHPS = 0;    // scan one channel
+    AD1CON2bits.SMPI = 1;    // means we scan 2 samples (N-1)
+    AD1CON3bits.ADCS = 8;    // TAD = 8 * TCY
+    AD1CSSL = 0;             // Don't scan all bits except:
+    AD1CSSLbits.CSS2 = 1;    // AN2
+    AD1CSSLbits.CSS11 = 1;   // AN11
+    AD1CON1bits.ADON = 1;    // start ADC
 }
 
 uint16_t ADC_ReadBattery(void) {
-    AD1CON1bits.SAMP = 1;
+    AD1CON1bits.SAMP = 1;     // begin the sampling since ASAM is 0
     tmr_wait_ms(TIMER1, 10);
-    AD1CON1bits.SAMP = 0;
+    AD1CON1bits.SAMP = 0;     // stop the sampling
     while (!AD1CON1bits.DONE);
     uint16_t result = ADC1BUF0;
     AD1CON1bits.DONE = 0;
@@ -73,8 +74,8 @@ uint16_t ADC_ReadIR(void) {
 
 void ADC_ReadBoth(uint16_t *ir_raw, uint16_t *bat_raw) {
     while (!AD1CON1bits.DONE);
-    *ir_raw = ADC_ReadIR();
-    *bat_raw = ADC_ReadBattery();
+    *ir_raw = ADC1BUF0;
+    *bat_raw = ADC1BUF1;
 }
 
 void send_uart_float_label(const char* label, float value) {
