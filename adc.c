@@ -23,7 +23,9 @@ void ADC_Init_Battery(void) {
 
 void ADC_Init_IR(void) {
     AD1CON1bits.ADON = 0;    // stop ADC
-    ANSELBbits.ANSB2 = 1;    // IR sensor connected to AN2
+    ANSELBbits.ANSB5 = 1;    // IR sensor connected to AN5
+    ANSELBbits.ANSB4 = 0;    // set the enable pin of the IR sensor as output
+    LATBbits.LATB4 = 1;      // enable the IR sensor
     AD1CON1bits.ASAM = 0;    // manual start
     AD1CON3bits.SAMC = 16;   // sample time = 16 TAD
     AD1CON1bits.SSRC = 7;    // automatic end
@@ -36,7 +38,9 @@ void ADC_Init_IR(void) {
 
 void ADC_Init_Scan(void) {
     AD1CON1bits.ADON = 0;    // stop ADC
-    ANSELBbits.ANSB2 = 1;    // IR connected to AN2
+    ANSELBbits.ANSB5 = 1;    // IR connected to AN5
+    ANSELBbits.ANSB4 = 0;    // set the enable pin of the IR sensor as output
+    LATBbits.LATB4 = 1;      // enable the IR sensor
     ANSELBbits.ANSB11 = 1;   // battery connected to AN11
     AD1CON1bits.ASAM = 1;    // automatic start
     AD1CON3bits.SAMC = 16;   // sample time = 16 TAD
@@ -49,7 +53,7 @@ void ADC_Init_Scan(void) {
     AD1CON2bits.SMPI = 1;    // means we scan 2 samples (N-1)
     AD1CON3bits.ADCS = 8;    // TAD = 8 * TCY
     AD1CSSL = 0;             // Don't scan all bits except:
-    AD1CSSLbits.CSS2 = 1;    // AN2
+    AD1CSSLbits.CSS5 = 1;    // AN5
     AD1CSSLbits.CSS11 = 1;   // AN11
     AD1CON1bits.ADON = 1;    // start ADC
 }
