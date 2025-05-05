@@ -82,44 +82,6 @@ void ADC_ReadBoth(uint16_t *ir_raw, uint16_t *bat_raw) {
     *bat_raw = ADC1BUF1;
 }
 
-void send_uart_float_label(const char* label, float value) {
-    char buffer[32];
-    sprintf(buffer, "$%s:%.2f", label, value);
-    char* ptr = buffer;
-    while (*ptr) {
-        UART_SendChar(UART_1, *ptr++);
-    }
-    UART_SendChar(UART_1, '\n');
-}
-
-void send_uart_hex_label(const char* label, uint16_t value) {
-    // Send label
-    UART_SendChar(UART_1, '$');
-    while (*label) {
-        UART_SendChar(UART_1, *label++);
-    }
-    UART_SendChar(UART_1, ':');
-
-    // Send value as 4-digit hex (16-bit)
-    for (int shift = 12; shift >= 0; shift -= 4) {
-        uint8_t nibble = (value >> shift) & 0xF;
-        char hex_char = (nibble < 10) ? ('0' + nibble) : ('A' + nibble - 10);
-        UART_SendChar(UART_1, hex_char);
-    }
-
-    UART_SendChar(UART_1, '*');
-    UART_SendChar(UART_1, '\n');
-}
-
-void send_uart_formatted(float ir_cm, float bat_v) {
-    char buffer[64];
-    sprintf(buffer, "$SENS,%.2f,%.2f*\n", ir_cm, bat_v);
-    char* ptr = buffer;
-    while (*ptr) {
-        UART_SendChar(UART_1, *ptr++);
-    }
-}
-
 float ADC_ConvertIRVoltageToDistance(float v) {
     float v2 = v * v;
     float v3 = v2 * v;

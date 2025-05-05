@@ -17,6 +17,7 @@
 #define ASSIGNMENT 3
 
 char *patterns[] = {"LD1", "LD2"};
+char buffer[64];
 
 int main(void) {
 
@@ -35,8 +36,12 @@ int main(void) {
         while(1){
             uint16_t raw = ADC_ReadBattery();
             float voltage = (raw / 4095.0f) * 3.3f * 2.0f;
-            send_uart_float_label("BAT", voltage);
-            __delay_ms(1000);     
+            sprintf(buffer, "$BAT:%.2f", voltage);
+            send_uart_string(UART_1, buffer);
+            tmr_wait_ms_3(TIMER1, 10);
+            if (transmit_buffer1.count > 0){
+                IEC0bits.U1TXIE = 1;
+            }
         }
     }
 
@@ -46,8 +51,12 @@ int main(void) {
             uint16_t raw = ADC_ReadIR();
             float voltage = (raw / 4095.0f) * 3.3f;
             float distance_cm = ADC_ConvertIRVoltageToDistance(voltage);
-            send_uart_float_label("IR", distance_cm);
-            __delay_ms(500);
+            sprintf(buffer, "$IR:%.2f", distance_cm);
+            send_uart_string(UART_1, buffer);
+            tmr_wait_ms_3(TIMER1, 10);
+            if (transmit_buffer1.count > 0){
+                IEC0bits.U1TXIE = 1;
+            }
         }
     }
 
@@ -56,13 +65,17 @@ int main(void) {
         while(1){
             uint16_t ir_raw = 0, bat_raw = 0;
             for (int i = 0; i < 100; i++) {
-                __delay_ms(1);
+                tmr_wait_ms_3(TIMER1, 10);
                 ADC_ReadBoth(&ir_raw, &bat_raw);
             }
             float ir_voltage = (ir_raw / 4095.0f) * 3.3f;
-            float bat_voltage = (bat_raw / 4095.0f) * 3.3f * 2.0f;
-            float distance_cm = ADC_ConvertIRVoltageToDistance(ir_voltage);
-            send_uart_formatted(distance_cm, bat_voltage);
+            float bat_v = (bat_raw / 4095.0f) * 3.3f * 2.0f;
+            float ir_cm = ADC_ConvertIRVoltageToDistance(ir_voltage);
+            sprintf(buffer, "$SENS,%.2f,%.2f*\n", ir_cm, bat_v);
+            send_uart_string(UART_1, buffer);
+            if (transmit_buffer1.count > 0){
+                IEC0bits.U1TXIE = 1;
+            }
         }
     }
 

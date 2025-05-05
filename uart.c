@@ -10,6 +10,30 @@
 #include "uart.h"
 #define UART_OVERWRITE_ON_FULL 0
 
+void send_uart_char(unsigned char uart, char data) {
+    if (uart == UART_1) {
+        buffer_write(&transmit_buffer1, data);
+    } else if (uart == UART_2) {
+        buffer_write(&transmit_buffer2, data);
+    }
+}
+
+void send_uart_string(unsigned char uart, const char *buffer) {
+    IEC0bits.U1TXIE = 0;
+    if (uart == UART_1){
+        while (*buffer != '\n') {
+            send_uart_char(UART_1, *buffer++);
+        }
+        send_uart_char(UART_1, '\n');
+    } else {
+        while (*buffer != '\n') {
+            send_uart_char(UART_2, *buffer++);
+        }
+        send_uart_char(UART_2, '\n');
+    }
+    IEC0bits.U1TXIE = 1;
+}
+
 void UART_Init(unsigned char uart) {
     if (uart == UART_1) {
         // Configure UART1
@@ -24,8 +48,11 @@ void UART_Init(unsigned char uart) {
         U1BRG = BRGVAL;          // Baud rate
         IEC0bits.U1RXIE = 1;
         IFS0bits.U1RXIF =0;
+        IEC0bits.U1TXIE = 0;
+        IFS0bits.U1TXIF =0;
         U1MODEbits.UARTEN = 1;   // Enable UART1
         U1STAbits.UTXEN = 1;     // Enable transmitter
+        
     } else if (uart == UART_2) {
         // Configure UART2
         U2MODEbits.UARTEN = 0;   // Disable UART2
@@ -36,19 +63,12 @@ void UART_Init(unsigned char uart) {
         U2MODEbits.ABAUD = 0;    // Auto-baud disabled
         U2MODEbits.BRGH = 0;     // Low-speed mode
         U2BRG = BRGVAL;          // Baud rate
-        IEC0bits.U1RXIE = 1;
-        IFS0bits.U1RXIF =0;
+        IEC1bits.U2RXIE = 1;
+        IFS1bits.U2RXIF =0;
+        IEC1bits.U2TXIE = 0;
+        IFS1bits.U2TXIF =0;
         U2MODEbits.UARTEN = 1;   // Enable UART2
         U2STAbits.UTXEN = 1;     // Enable transmitter
-    }
-}
-
-void UART_SendChar(unsigned char uart, char data) {
-    while(U1STAbits.UTXBF);
-    if (uart == UART_1) {
-        U1TXREG = data;          // Send character
-    } else if (uart == UART_2) {
-        U2TXREG = data;          // Send character
     }
 }
 
@@ -63,7 +83,6 @@ void __attribute__((__interrupt__, auto_psv)) _U1RXInterrupt(void) {
 #else
         char incoming = U1RXREG;
         buffer_write(&main_buffer_1, incoming);
-        
 #endif
     }
     if (U1STAbits.OERR){
@@ -85,5 +104,35 @@ void __attribute__((__interrupt__, auto_psv)) _U2RXInterrupt(void) {
     }
     if (U2STAbits.OERR){
         U2STAbits.OERR = 0;
+    }
+}
+
+void __attribute__((__interrupt__, auto_psv)) _U1TXInterrupt(void){
+    IFS0bits.U1TXIF = 0;
+    char data;
+
+    while (transmit_buffer1.count > 0 && !U1STAbits.UTXBF) {
+        buffer_read(&transmit_buffer1, &data);
+        U1TXREG = data;
+    }
+
+    if (transmit_buffer1.count <= 0){
+        IEC0bits.U1TXIE = 0;
+    }
+}
+
+
+
+void __attribute__((__interrupt__, auto_psv)) _U2TXInterrupt(void){
+    IFS1bits.U2TXIF = 0;
+    char data;
+    
+    while (transmit_buffer2.count > 0 && !U2STAbits.UTXBF) {
+        buffer_read(&transmit_buffer2, &data);
+        U2TXREG = data;
+    }
+   
+    if (transmit_buffer2.count <= 0){
+        IEC1bits.U2TXIE = 0;
     }
 }

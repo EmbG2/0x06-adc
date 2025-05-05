@@ -11,6 +11,8 @@
 
 CircularBuffer main_buffer_1;
 CircularBuffer main_buffer_2;
+CircularBuffer transmit_buffer1;
+CircularBuffer transmit_buffer2;
 
 void buffer_init(CircularBuffer *buffer, char **patterns, int pattern_count)
 {
@@ -61,7 +63,6 @@ void uart_debug_send(char c) {
     while (U1STAbits.UTXBF); // Wait while TX buffer is full
     U1TXREG = c;
 }
-
 
 void detect_pattern(CircularBuffer *buffer)
 {

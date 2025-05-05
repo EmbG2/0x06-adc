@@ -11,7 +11,7 @@
 #include "timer.h"
 #include <xc.h> 
 
-#define MAIN_BUFFER_SIZE 16
+#define MAIN_BUFFER_SIZE 100
 #define SECONDARY_BUFFER_SIZE 5
 #define MAX_PATTERN_COUNT 10
 
@@ -34,6 +34,8 @@ void detect_pattern(CircularBuffer *buffer);
 
 extern CircularBuffer main_buffer_1;
 extern CircularBuffer main_buffer_2;
+extern CircularBuffer transmit_buffer1; 
+extern CircularBuffer transmit_buffer2;
 
 #ifdef	__cplusplus
 extern "C" {
