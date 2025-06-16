@@ -14,7 +14,7 @@
 #define BATTERY_MANUAL_SAMPLING 1
 #define IR_MANUAL_SAMPLE_AUTO 2
 #define SCAN_MODE_IR_BATTERY 3
-#define ASSIGNMENT 3
+#define ASSIGNMENT 2
 
 char *patterns[] = {"LD1", "LD2"};
 char buffer[64];
